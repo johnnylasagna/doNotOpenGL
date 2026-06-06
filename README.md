@@ -53,6 +53,30 @@ include/
 
 Without `src/glad/glad.c`, linking will fail with missing OpenGL loader symbols.
 
+## stb_image Setup
+
+This project uses `stb_image` for texture loading.
+
+Before building, add `stb_image.h` manually:
+
+1. Download `stb_image.h` from:
+
+   * https://github.com/nothings/stb/blob/master/stb_image.h
+
+2. Place it inside:
+
+```text id="z0u97n"
+include/stb/stb_image.h
+```
+
+Your structure should look like:
+
+```text id="u4wxca"
+include/
+    stb/
+        stb_image.h
+```
+
 ## Build And Run
 
 From the repository root:
