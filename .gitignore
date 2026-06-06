@@ -1,7 +1,14 @@
 .vscode
-assets
+assets/*
+!assets/earth_day.jpg
+!assets/sun.jpg
 build
-shaders
+shaders/fragment/*
+!shaders/fragment/light.fs
+!shaders/fragment/object.fs
+shaders/vertex/*
+!shaders/vertex/light.vs
+!shaders/vertex/object.vs
 src/glad
 src/scenes/*
 !src/scenes/scene_1.cpp
