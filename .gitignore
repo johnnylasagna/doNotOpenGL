@@ -1,0 +1,11 @@
+.vscode
+assets
+build
+shaders
+src/glad
+src/scenes/*
+!src/scenes/scene_1.cpp
+include/scenes/*
+!include/scenes/scene.h
+!include/scenes/scene_1.h
+videoSaveHack.txt
