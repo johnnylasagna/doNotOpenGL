@@ -40,7 +40,7 @@ target_link_libraries(EngineCore PRIVATE OpenGL::GL glfw3)
 # Compile the specific game scenes and main entry point
 add_executable(App
     src/main.cpp
-    src/scenes/scene_2.cpp
+    src/scenes/scene_1.cpp
 )
 
 # Link the pre-compiled EngineCore library to the executable

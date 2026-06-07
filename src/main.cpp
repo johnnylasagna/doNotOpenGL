@@ -3,7 +3,7 @@ extern "C" {
 }
 
 #include "core/application.h"
-#include "scenes/scene_2.h"
+#include "scenes/scene_1.h"
 
 int main() {
 	DoNotOpenGL::Application app;
@@ -12,7 +12,7 @@ int main() {
         return -1;
     }
 	
-	app.setScene(std::make_unique<DoNotOpenGL::Scene2>(&app));
+	app.setScene(std::make_unique<DoNotOpenGL::Scene1>(&app));
 
 	app.run();
 
