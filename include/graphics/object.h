@@ -12,14 +12,16 @@ namespace DoNotOpenGL {
 class Object {
   public:
 	Object(std::unique_ptr<Mesh> mesh, Shader *shader, std::vector<Texture *> texture);
+	void setMaterialProperties(Texture *diffuse, Texture *specular, float shininess);
 	void setPosition(float x, float y, float z);
-	glm::vec3& getPosition();
+	glm::vec3 &getPosition();
 	void setScale(float x, float y, float z);
 	void setRotation(float theta, float x, float y, float z);
 	void setProjection(glm::mat4 &projection);
 	void setView(glm::mat4 &view);
+	void setViewPosition(glm::vec3 &viewPosition);
 	void setModel();
-	Shader* getShader();
+	Shader *getShader();
 
 	void render();
 
@@ -27,6 +29,8 @@ class Object {
 	std::unique_ptr<Mesh> mesh;
 	Shader *shader;
 	std::vector<Texture *> textures;
+	Texture* diffuseTexture = nullptr;
+	Texture* specularTexture = nullptr;
 
 	glm::vec3 position;
 	glm::vec3 scale;

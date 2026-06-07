@@ -9,7 +9,9 @@
 
 namespace DoNotOpenGL {
 
-enum class CameraMovement { FORWARD, BACKWARD, LEFT, RIGHT };
+enum class CameraMovement { FORWARD, BACKWARD, LEFT, RIGHT, DOWN, UP };
+enum class CameraMode {FLY, CREATIVE};
+enum class CameraTarget {UNSET, SET};
 
 struct Camera {
 	glm::vec3 pos{};
@@ -29,6 +31,8 @@ struct Camera {
 	float currentFrame{};
 
 	Camera(float yaw = -90.0f, float pitch = 0.0f, float speed = 2.5f, float mouseSensitivity = 1.0f, float zoom = 45.0f);
+	CameraMode mode = CameraMode::CREATIVE;
+	CameraTarget targetSet = CameraTarget::UNSET;
 
 	glm::mat4 GetViewMatrix();
 	void updateCameraVectors();
@@ -36,7 +40,6 @@ struct Camera {
 	void processMouseMovement(float xOffset, float yOffset, bool constrainPitch = true);
 	void ProcessMouseScroll(float yoffset);
 	void moveToward(float deltaTime, float desiredDistance);
-	glm::mat4 lookAtTarget();
 };
 
 } // namespace DoNotOpenGL

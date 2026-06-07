@@ -2,7 +2,7 @@
 
 I started learning OpenGL using this [tutorial](https://learnopengl.com/Introduction) to render a music video for a song I'm currently writing. I decided to call the project DoNotOpenGL (lol). The lighting implmentation is in progress.
 
-There is a demo scene called `Scene1` in `src/scenes/scene_1.cpp` you can run using the steps below.
+There is a demo scene called `Scene1` in `src/scenes/scene_1.cpp` you can run using the steps below. The textures are from [here](https://www.solarsystemscope.com/textures/).
 
 ## Repository Layout
 

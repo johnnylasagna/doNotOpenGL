@@ -10,7 +10,14 @@ Camera::Camera(float yaw, float pitch, float speed, float mouseSensitivity, floa
 	updateCameraVectors();
 }
 
-glm::mat4 Camera::GetViewMatrix() { return glm::lookAt(pos, pos + front, up); }
+glm::mat4 Camera::GetViewMatrix() {
+	if (targetSet == CameraTarget::UNSET) {
+		return glm::lookAt(pos, pos + front, up);
+	}
+	else {
+		return glm::lookAt(pos, target, worldUp);
+	}
+}
 
 void Camera::updateCameraVectors() {
 
@@ -33,20 +40,54 @@ void Camera::processKeyboard(CameraMovement direction, float deltaTime) {
 
 	float velocity = speed * deltaTime;
 
-	if (direction == CameraMovement::FORWARD) {
-		pos += front * velocity;
-	}
+	if (mode == CameraMode::FLY) {
+		if (direction == CameraMovement::FORWARD) {
+			pos += front * velocity;
+		}
 
-	if (direction == CameraMovement::BACKWARD) {
-		pos -= front * velocity;
-	}
+		if (direction == CameraMovement::BACKWARD) {
+			pos -= front * velocity;
+		}
 
-	if (direction == CameraMovement::LEFT) {
-		pos -= right * velocity;
-	}
+		if (direction == CameraMovement::LEFT) {
+			pos -= right * velocity;
+		}
 
-	if (direction == CameraMovement::RIGHT) {
-		pos += right * velocity;
+		if (direction == CameraMovement::RIGHT) {
+			pos += right * velocity;
+		}
+		if (direction == CameraMovement::UP) {
+			pos += up * velocity;
+		}
+		if (direction == CameraMovement::DOWN) {
+			pos -= up * velocity;
+		}
+	}
+	if (mode == CameraMode::CREATIVE) {
+		if (direction == CameraMovement::FORWARD) {
+			glm::vec3 flatFront = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
+			pos += flatFront * velocity;
+		}
+		if (direction == CameraMovement::BACKWARD) {
+			glm::vec3 flatFront = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
+			pos -= flatFront * velocity;
+		}
+		if (direction == CameraMovement::LEFT) {
+			glm::vec3 flatRight = glm::normalize(glm::vec3(right.x, 0.0f, right.z));
+			pos -= flatRight * velocity;
+		}
+		if (direction == CameraMovement::RIGHT) {
+			glm::vec3 flatRight = glm::normalize(glm::vec3(right.x, 0.0f, right.z));
+			pos += flatRight * velocity;
+		}
+
+		if (direction == CameraMovement::UP) {
+			pos += worldUp * velocity;
+		}
+
+		if (direction == CameraMovement::DOWN) {
+			pos -= worldUp * velocity;
+		}
 	}
 }
 
@@ -83,10 +124,6 @@ void Camera::moveToward(float deltaTime, float desiredDistance) {
 	if (currentDistance > desiredDistance) {
 		pos += glm::normalize(toTarget) * speed * deltaTime;
 	}
-}
-
-glm::mat4 Camera::lookAtTarget() {
-	return glm::lookAt(pos, target, worldUp);
 }
 
 } // namespace DoNotOpenGL

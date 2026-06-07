@@ -2,6 +2,7 @@
 assets/*
 !assets/earth_day.jpg
 !assets/sun.jpg
+!assets/stars.jpg
 build
 shaders/fragment/*
 !shaders/fragment/light.fs

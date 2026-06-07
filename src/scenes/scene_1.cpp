@@ -13,24 +13,34 @@ Scene1::Scene1(Application *app) : Scene(app), camera(0.0f, 0.0f, 5.0f, 0.1f, 45
 void Scene1::init() {
 
 	camera.pos = glm::vec3(-100.0f, 0.0f, 0.0f);
+	camera.targetSet = CameraTarget::SET;
 
 	ResourceManager &rm = application->getResourceManager();
 
 	Shader *lightShader = rm.loadShader("light", "shaders/vertex/light.vs", "shaders/fragment/light.fs");
 	Shader *objectShader = rm.loadShader("object", "shaders/vertex/object.vs", "shaders/fragment/object.fs");
+	Shader *skyboxShader = rm.loadShader("skybox", "shaders/vertex/skybox.vs", "shaders/fragment/skybox.fs");
 
 	glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
 
 	objectShader->use();
 	objectShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 	objectShader->setVec3("objectColor", 0.2f, 0.5f, 0.5f);
-	objectShader->setVec3("lightPos", lightPos);
+	objectShader->setVec3("light.position", lightPos);
+	objectShader->setVec3("material.ambient", 0.1f, 0.1f, 0.1f);
+	objectShader->setVec3("material.diffuse", 1.0f, 1.0f, 1.0f);
+	objectShader->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+	objectShader->setFloat("material.shininess", 16.0f);
+	objectShader->setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+	objectShader->setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+	objectShader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
 	lightShader->use();
 	lightShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 	Texture *objectTexture = rm.loadTexture("planet", "assets/earth_day.jpg");
 	Texture *lightTexture = rm.loadTexture("sun", "assets/sun.jpg");
+	Texture *skyboxTexture = rm.loadTexture("stars", "assets/stars.jpg");
 
 	float theta = 0;
 	float phi = 0;
@@ -90,9 +100,11 @@ void Scene1::init() {
 
 	std::unique_ptr<Mesh> lightMesh = std::make_unique<Mesh>(vertices, indices);
 	std::unique_ptr<Mesh> objectMesh = std::make_unique<Mesh>(vertices, indices);
+	std::unique_ptr<Mesh> skyboxMesh = std::make_unique<Mesh>(vertices, indices);
 
 	Object lightObject(std::move(lightMesh), lightShader, std::vector<Texture *>{lightTexture});
 	Object objectObject(std::move(objectMesh), objectShader, std::vector<Texture *>{objectTexture});
+	Object skyboxObject(std::move(skyboxMesh), skyboxShader, std::vector<Texture *>{skyboxTexture});
 
 	lightObject.setPosition(0.0f, 0.0f, 0.0f);
 	lightObject.setScale(0.5f, 0.5f, 0.5f);
@@ -100,10 +112,15 @@ void Scene1::init() {
 
 	objectObject.setPosition(10.0f, 0.0f, 0.0f);
 	objectObject.setScale(0.25f, 0.25f, 0.25f);
-	objectObject.setRotation(0, 0.0f, 0.1f, 0.0f);
+	objectObject.setRotation(0, 0.0f, 1.0f, 0.0f);
+
+	skyboxObject.setPosition(0.0f, 0.0f, 0.0f);
+	skyboxObject.setScale(20.0f, 20.0f, 20.0f);
+	skyboxObject.setRotation(0, 0.0f, 1.0f, 0.0f);
 
 	objects.push_back(std::move(lightObject));
 	objects.push_back(std::move(objectObject));
+	objects.push_back(std::move(skyboxObject));
 }
 
 void Scene1::update(float deltaTime) {
@@ -112,6 +129,8 @@ void Scene1::update(float deltaTime) {
 
 	objects[1].setPosition(25 * cos(theta), 0.0f, 25 * sin(theta));
 	objects[1].setRotation(theta, 0.0f, 1.0f, 0.0f);
+	objects[1].setViewPosition(camera.pos);
+
 	objects[0].setRotation(theta / 10, 0.0f, 1.0f, 0.0f);
 
 	theta += 1.0f * deltaTime;
@@ -132,15 +151,25 @@ void Scene1::render(Camera &camera, float aspectRatio) {
 		aspectRatio = 0.1f;
 	}
 
-	glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), aspectRatio, 0.1f, 100.0f);
-	glm::mat4 view = camera.lookAtTarget();
-	// glm::mat4 view = camera.GetViewMatrix();
+	glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), aspectRatio, 0.1f, 500.0f);
+	// glm::mat4 view = camera.lookAtTarget();
+	glm::mat4 view = camera.GetViewMatrix();
 
-	for (auto &object : objects) {
-		object.setProjection(projection);
-		object.setView(view);
-		object.setModel();
-		object.render();
+	glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
+
+	glDepthMask(GL_FALSE);
+	objects[2].setProjection(projection);
+	objects[2].setView(skyboxView);
+	objects[2].setModel();
+	objects[2].render();
+	glDepthMask(GL_TRUE);
+
+	// draw everything else
+	for (int i = 0; i < 2; i++) {
+		objects[i].setProjection(projection);
+		objects[i].setView(view);
+		objects[i].setModel();
+		objects[i].render();
 	}
 }
 
