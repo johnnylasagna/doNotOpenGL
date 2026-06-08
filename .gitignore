@@ -6,10 +6,11 @@ assets/*
 build
 shaders/fragment/*
 !shaders/fragment/light.fs
-!shaders/fragment/object.fs
+!shaders/fragment/scene1/object.fs
 shaders/vertex/*
+shaders/vertex/scene1/*
 !shaders/vertex/light.vs
-!shaders/vertex/object.vs
+!shaders/vertex/scene1/object.vs
 src/glad
 src/scenes/*
 !src/scenes/scene_1.cpp

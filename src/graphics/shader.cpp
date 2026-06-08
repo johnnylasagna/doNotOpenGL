@@ -59,6 +59,7 @@ unsigned int Shader::createShaderProgram(const char *vertexShaderSource, const c
 	glCompileShader(vertexShader);
 
 	if (!checkShaderCompilation(vertexShader, "VERTEX")) {
+		std::cout << vertexShaderSource << std::endl;
 		return 0;
 	}
 
@@ -68,6 +69,7 @@ unsigned int Shader::createShaderProgram(const char *vertexShaderSource, const c
 
 	if (!checkShaderCompilation(fragmentShader, "FRAGMENT")) {
 		glDeleteShader(vertexShader);
+		std::cout << fragmentShaderSource << std::endl;
 		return 0;
 	}
 

@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <memory>
 
 namespace DoNotOpenGL {
 
@@ -14,13 +15,17 @@ struct Mesh {
 	Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
 	~Mesh();
 
-	// Copies
+	// copies
 	Mesh(const Mesh &) = delete;
-	Mesh &operator=(const Mesh &) = delete;
+    Mesh &operator=(const Mesh &) = delete;
 
-	// Moves
-	Mesh(Mesh&& other) noexcept;
-    Mesh& operator=(Mesh&& other) noexcept;
+	//moves
+    Mesh(Mesh&&) = delete;
+    Mesh &operator=(Mesh&&) = delete;
 };
+
+std::shared_ptr<Mesh> createCubeMesh();
+std::shared_ptr<Mesh> createSphereMesh(int stacks, int slices);
+std::shared_ptr<Mesh> createFlatMesh(int height, int width);
 
 } // namespace DoNotOpenGL
