@@ -5,7 +5,7 @@
 
 namespace DoNotOpenGL {
 
-inline constexpr unsigned int screenWidth = 800;
-inline constexpr unsigned int screenHeight = 600;
+inline constexpr unsigned int screenWidth = 1600;
+inline constexpr unsigned int screenHeight = 1200;
 
 } // namespace DoNotOpenGL

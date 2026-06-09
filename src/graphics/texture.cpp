@@ -11,7 +11,7 @@ Texture::Texture(const char *path) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	stbi_set_flip_vertically_on_load(true);
+	// stbi_set_flip_vertically_on_load(true);
 
 	int width, height, nrChannels;
 	unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0);

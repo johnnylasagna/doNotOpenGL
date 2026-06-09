@@ -1,10 +1,11 @@
 #include "graphics/mesh.h"
 #include <utility>
 #include <math.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace DoNotOpenGL {
 
-Mesh::Mesh(const std::vector<float>& vertices, const std::vector<unsigned int> &indices) {
+Mesh::Mesh(const std::vector<float> &vertices, const std::vector<unsigned int> &indices) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -111,8 +112,8 @@ std::shared_ptr<Mesh> createSphereMesh(int stacks, int slices) {
 			vertices.push_back(z / radius);
 
 			// Texture coordinates
-			vertices.push_back((float)j / slices);
-			vertices.push_back((float)i / stacks);
+			vertices.push_back(1.0f - (float)j / slices);
+			vertices.push_back(1.0f - (float)i / stacks);
 		}
 	}
 
@@ -157,8 +158,8 @@ std::shared_ptr<Mesh> createFlatMesh(int height, int width) {
 			vertices.push_back(0);
 
 			// Texture
-			vertices.push_back(x / (float)(width - 1));
-			vertices.push_back(z / (float)(height - 1));
+			vertices.push_back(1.0f - x / (float)(width - 1));
+			vertices.push_back(1.0f - z / (float)(height - 1));
 		}
 	}
 
@@ -183,7 +184,132 @@ std::shared_ptr<Mesh> createFlatMesh(int height, int width) {
 		}
 	}
 
-	return std::make_shared<Mesh>(vertices, indices); 
+	return std::make_shared<Mesh>(vertices, indices);
+}
+
+std::shared_ptr<Mesh> createTerrainMesh(int height, int width, float tileScale) {
+	std::vector<float> heights(width * height);
+
+	for (int z = 0; z < height; z++) {
+		for (int x = 0; x < width; x++) {
+
+			float terrainHeight = 0.0f;
+
+			terrainHeight += sin(x * 0.02f) * cos(z * 0.02f) * 20.0f;
+			terrainHeight += sin(x * 0.05f) * cos(z * 0.05f) * 10.0f;
+			terrainHeight += sin(x * 0.1f) * cos(z * 0.1f) * 5.0f;
+			terrainHeight += sin(x * 0.2f) * cos(z * 0.2f) * 2.0f;
+
+			const float maxAmplitude = 37.0f;
+
+			terrainHeight = (terrainHeight / maxAmplitude) * 10.0f;
+
+			heights[z * width + x] = terrainHeight;
+		}
+	}
+
+	std::vector<float> vertices;
+
+	vertices.reserve(width * height * 8);
+
+	for (int z = 0; z < height; z++) {
+		for (int x = 0; x < width; x++) {
+
+			float y = heights[z * width + x];
+
+			float left = x > 0 ? heights[z * width + (x - 1)] : y;
+
+			float right = x < width - 1 ? heights[z * width + (x + 1)] : y;
+
+			float down = z > 0 ? heights[(z - 1) * width + x] : y;
+
+			float up = z < height - 1 ? heights[(z + 1) * width + x] : y;
+
+			glm::vec3 normal(left - right, 2.0f, down - up);
+
+			normal = glm::normalize(normal);
+
+			vertices.push_back((float)x);
+			vertices.push_back(y);
+			vertices.push_back((float)z);
+
+			vertices.push_back(normal.x);
+			vertices.push_back(normal.y);
+			vertices.push_back(normal.z);
+
+			vertices.push_back(1.0f - x / (float)(width - 1) * tileScale);
+
+			vertices.push_back(1.0f - z / (float)(height - 1) * tileScale);
+		}
+	}
+
+	std::vector<unsigned int> indices;
+
+	indices.reserve((width - 1) * (height - 1) * 6);
+
+	for (int z = 0; z < height - 1; z++) {
+		for (int x = 0; x < width - 1; x++) {
+
+			int topLeft = z * width + x;
+
+			int topRight = topLeft + 1;
+
+			int bottomLeft = topLeft + width;
+
+			int bottomRight = bottomLeft + 1;
+
+			indices.push_back(topLeft);
+			indices.push_back(bottomLeft);
+			indices.push_back(topRight);
+
+			indices.push_back(topRight);
+			indices.push_back(bottomLeft);
+			indices.push_back(bottomRight);
+		}
+	}
+
+	return std::make_shared<Mesh>(vertices, indices);
+}
+
+std::shared_ptr<Mesh> createConeMesh(float radius, float height, int slices) {
+	std::vector<float> vertices;
+	std::vector<unsigned int> indices;
+	float PI = 3.1415927f;
+
+	// tip of cone
+	vertices.push_back(0.0f); // pos
+	vertices.push_back(0.0f);
+	vertices.push_back(0.0f);
+	vertices.push_back(0.0f); // normal
+	vertices.push_back(1.0f);
+	vertices.push_back(0.0f);
+	vertices.push_back(0.5f); // uv
+	vertices.push_back(0.0f);
+
+	// base ring
+	for (int i = 0; i <= slices; i++) {
+		float phi = i * 2.0f * PI / slices;
+		float x = radius * cos(phi);
+		float z = radius * sin(phi);
+
+		vertices.push_back(x);
+		vertices.push_back(height);
+		vertices.push_back(z);
+		vertices.push_back(x / radius); // normal points outward
+		vertices.push_back(0.0f);
+		vertices.push_back(z / radius);
+		vertices.push_back((float)i / slices);
+		vertices.push_back(1.0f);
+	}
+
+	// triangles from tip to base ring
+	for (int i = 0; i < slices; i++) {
+		indices.push_back(0); // tip
+		indices.push_back(i + 1);
+		indices.push_back(i + 2);
+	}
+
+	return std::make_shared<Mesh>(std::move(vertices), std::move(indices));
 }
 
 } // namespace DoNotOpenGL

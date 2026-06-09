@@ -76,6 +76,75 @@ include/
     stb/
         stb_image.h
 ```
+## ImGui Setup
+
+Create this structure:
+
+```text
+imgui/
+```
+
+Copy these source files from the Dear ImGui repository into `src/imgui/`:
+
+```text
+imgui.cpp
+imgui_draw.cpp
+imgui_tables.cpp
+imgui_widgets.cpp
+imgui_impl_glfw.cpp
+imgui_impl_opengl3.cpp
+```
+
+Your structure should look like:
+
+```text
+src/
+   imgui/
+      imgui.cpp
+      imgui_draw.cpp
+      imgui_tables.cpp
+      imgui_widgets.cpp
+      imgui_impl_glfw.cpp
+      imgui_impl_opengl3.cpp
+```
+
+---
+
+Copy these header files into:
+
+```text
+include/imgui/
+```
+
+Required headers:
+
+```text
+imgui.h
+imgui_internal.h
+imgui_impl_glfw.h
+imgui_impl_opengl3.h
+imgui_impl_opengl3_loader.h
+imconfig.h
+imstb_rectpack.h
+imstb_textedit.h
+imstb_truetype.h
+```
+
+Your final structure should look like:
+
+```text
+include/
+    imgui/
+        imgui.h
+        imgui_internal.h
+        imgui_impl_glfw.h
+        imgui_impl_opengl3.h
+        imgui_impl_opengl3_loader.h
+        imconfig.h
+        imstb_rectpack.h
+        imstb_textedit.h
+        imstb_truetype.h
+```
 
 ## Build And Run
 

@@ -27,6 +27,18 @@ add_library(EngineCore STATIC
     # Include glad.c and stb_image.cpp if they are in your source tree
     src/glad/glad.c 
     src/graphics/stb.cpp
+
+    #ImGUI
+    src/imgui/imgui.cpp
+    src/imgui/imgui_draw.cpp
+    src/imgui/imgui_tables.cpp
+    src/imgui/imgui_widgets.cpp
+    src/imgui/imgui_impl_glfw.cpp
+    src/imgui/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(EngineCore PRIVATE
+    include/imgui
 )
 
 # Link standard system libraries to the engine

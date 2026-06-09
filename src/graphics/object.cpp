@@ -2,33 +2,7 @@
 
 namespace DoNotOpenGL {
 
-Object::Object(std::shared_ptr<Mesh> mesh, Shader *shader, std::vector<Texture *> textures)
-    : mesh(std::move(mesh)), shader(shader), textures(textures) {
-	shader->use();
-	for (int i = 0; i < textures.size(); i++) {
-		std::string name = "texture";
-		name.push_back('0' + i);
-		shader->setInt(name, i);
-	}
-}
-
-void Object::setPosition(float x, float y, float z) { position = glm::vec3(x, y, z); }
-
-void Object::setPosition(glm::vec3 &objectPosition) { position = objectPosition; }
-
-void Object::setScale(float x, float y, float z) { scale = glm::vec3(x, y, z); }
-
-void Object::setScale(glm::vec3 &objectScale) { scale = objectScale; }
-
-void Object::setRotation(float theta, float x, float y, float z) {
-	angle = theta;
-	rotation = glm::vec3(x, y, z);
-}
-
-void Object::setRotation(float theta, glm::vec3 &objectRotation) {
-	angle = theta;
-	rotation = objectRotation;
-}
+Object::Object(std::shared_ptr<Mesh> mesh, Shader *shader, Transform transform) : mesh(mesh), shader(shader), transform(transform) {}
 
 void Object::setProjection(glm::mat4 &projection) {
 	shader->use();
@@ -43,80 +17,106 @@ void Object::setView(glm::mat4 &view) {
 void Object::setModel() {
 	shader->use();
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, position);
-	model = glm::rotate(model, angle, rotation);
-	model = glm::scale(model, scale);
+	model = glm::translate(model, transform.position);
+	model = glm::rotate(model, transform.angle, transform.rotation);
+	model = glm::scale(model, transform.scale);
 	shader->setMat4("model", model);
 
 	glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 	shader->setMat3("normalMatrix", normalMatrix);
 }
 
-glm::vec3 &Object::getPosition() { return position; }
-
-Shader *Object::getShader() { return shader; }
-
-void MaterialObject::render() {
+void Object::render(glm::vec3 &viewPos, std::vector<Light> lights) {
 	shader->use();
-	for (int i = 0; i < textures.size(); i++) {
-		textures[i]->use(i);
+
+	if (bodyTexture) {
+		bodyTexture->use(0);
+		shader->setInt("bodyTexture", 0);
+		shader->setBool("hasBodyTexture", true);
+	} else {
+		shader->setBool("hasBodyTexture", false);
 	}
-	if (diffuseTexture)
-		diffuseTexture->use((int)textures.size());
-	if (specularTexture)
-		specularTexture->use((int)textures.size() + 1);
+
+	if (heightMap) {
+		heightMap->use(1);
+		shader->setInt("heightMap", 1);
+		shader->setBool("hasHeightMap", true);
+	} else {
+		shader->setBool("hasHeightMap", false);
+	}
+
+	shader->setVec3("viewPos", viewPos);
+
+	shader->setBool("isLightSource", isLightSource);
+	shader->setBool("isSkybox", isSkybox);
+	shader->setBool("hasMaterial", material.has_value());
+
+	if (isLightSource) {
+		shader->setVec3("lightColor", sourceLightColor);
+	}
+
+	if (!isSkybox && !isLightSource) {
+		shader->setInt("lightCount", lights.size());
+		for (int i = 0; i < lights.size(); i++) {
+			Light &light = lights[i];
+			std::string prefix = "lights[" + std::to_string(i) + "].";
+			setLightSource(prefix, light);
+		}
+	}
+
+	if (material) {
+		auto &mat = material.value();
+
+		if (mat.diffuseTexture) {
+			mat.diffuseTexture->use(2);
+			shader->setInt("material.diffuse", 2);
+			shader->setBool("material.hasDiffuseMap", true); 
+		} else {
+			shader->setBool("material.hasDiffuseMap", false); 
+		}
+
+		if (mat.specularTexture) {
+			mat.specularTexture->use(3);
+			shader->setInt("material.specular", 3);
+			shader->setBool("material.hasSpecularMap", true); 
+		} else {
+			shader->setBool("material.hasSpecularMap", false); 
+		}
+
+		shader->setFloat("material.shininess", mat.shininess);
+	}
+
 	glBindVertexArray(mesh->VAO);
 
 	glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
 }
 
-void MaterialObject::setMaterialProperties(Texture *diffuse, Texture *specular, float shininess) {
+void Object::setMaterial(Texture *diffuse, Texture *specular, float shininess) {
+
+	material = Material{diffuse, specular, shininess};
+
 	shader->use();
-	shader->setInt("material.diffuse", (int)textures.size());
-	shader->setInt("material.specular", (int)textures.size() + 1);
+	shader->setInt("material.diffuse", 2);
+	shader->setInt("material.specular", 3);
 	shader->setFloat("material.shininess", shininess);
-
-	diffuseTexture = diffuse;
-	specularTexture = specular;
 }
 
-void MaterialObject::setLightProperties(int id, LightObject &lightObject) {
-	shader->use();
-	shader->setVec3("light.position", lightObject.getPosition());
-	shader->setVec3("light.ambient", lightObject.getAmbient());
-	shader->setVec3("light.diffuse", lightObject.getDiffuse());
-	shader->setVec3("light.specular", lightObject.getSpecular());
+void Object::setLight(Light light) { this->light = light; }
+
+void Object::setLightSource(std::string prefix, Light &light) {
+	shader->setInt(prefix + "type", static_cast<int>(light.type));
+	shader->setVec3(prefix + "position", light.position);
+	shader->setVec3(prefix + "direction", light.direction);
+	shader->setVec3(prefix + "color", light.color);
+	shader->setVec3(prefix + "ambient", light.ambient);
+	shader->setVec3(prefix + "diffuse", light.diffuse);
+	shader->setVec3(prefix + "specular", light.specular);
+	shader->setFloat(prefix + "intensity", light.intensity);
+	shader->setFloat(prefix + "constant", light.constant);
+	shader->setFloat(prefix + "linear", light.linear);
+	shader->setFloat(prefix + "quadratic", light.quadratic);
+	shader->setFloat(prefix + "innerCutoff", light.innerCutoff);
+	shader->setFloat(prefix + "outerCutoff", light.outerCutoff);
 }
-
-void MaterialObject::setViewPosition(glm::vec3 &viewPosition) {
-	shader->use();
-	shader->setVec3("viewPos", viewPosition);
-}
-
-void LightObject::render() {
-	shader->use();
-	for (int i = 0; i < textures.size(); i++) {
-		textures[i]->use(i);
-	}
-	glBindVertexArray(mesh->VAO);
-
-	glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
-}
-
-void LightObject::setProperties(const char *lightType, glm::vec3 &lightColor, glm::vec3 &lightAmbient, glm::vec3 &lightDiffuse,
-                                glm::vec3 &lightSpecular) {
-	type = lightType;
-	color = lightColor;
-	ambient = lightAmbient;
-	diffuse = lightDiffuse;
-	specular = lightSpecular;
-
-	shader->use();
-	shader->setVec3("lightColor", lightColor);
-}
-
-glm::vec3 &LightObject::getAmbient() { return ambient; }
-glm::vec3 &LightObject::getDiffuse() { return diffuse; }
-glm::vec3 &LightObject::getSpecular() { return specular; }
 
 } // namespace DoNotOpenGL

@@ -25,8 +25,12 @@ class Application {
 	Scene *getActiveScene();
 	ResourceManager &getResourceManager();
 
+	void initImGui();
+	void renderImGui();
+	void destroyImGui();
+
   private:
-	GLFWwindow *window;
+	GLFWwindow *window = nullptr;
 	Timer timer;
 	Input input;
 	std::unique_ptr<Scene> activeScene;

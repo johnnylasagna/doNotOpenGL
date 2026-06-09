@@ -27,5 +27,7 @@ struct Mesh {
 std::shared_ptr<Mesh> createCubeMesh();
 std::shared_ptr<Mesh> createSphereMesh(int stacks, int slices);
 std::shared_ptr<Mesh> createFlatMesh(int height, int width);
+std::shared_ptr<Mesh> createTerrainMesh(int height, int width, float tileScale);
+std::shared_ptr<Mesh> createConeMesh(float radius, float height, int slices);
 
 } // namespace DoNotOpenGL

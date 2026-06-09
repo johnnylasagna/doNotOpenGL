@@ -5,6 +5,10 @@
 #include "graphics/texture.h"
 #include "graphics/mesh.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 #include <iostream>
 
 namespace DoNotOpenGL {
@@ -12,6 +16,7 @@ namespace DoNotOpenGL {
 Application::Application() : window(nullptr) {}
 
 Application::~Application() {
+	destroyImGui();
 	resourceManager.clear();
 	glfwTerminate();
 }
@@ -35,6 +40,7 @@ bool Application::init() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glEnable(GL_DEPTH_TEST);
+	initImGui();
 	return true;
 }
 
@@ -76,9 +82,37 @@ void Application::run() {
 			activeScene->render(activeScene->getCamera(), currentAspectRatio);
 		}
 
+		renderImGui();
+
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
+}
+
+void Application::initImGui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+void Application::renderImGui() {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	activeScene->renderUI();
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Application::destroyImGui() {
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 }
 
 Input &Application::getInput() { return input; }
