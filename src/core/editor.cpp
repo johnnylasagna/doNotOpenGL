@@ -33,7 +33,7 @@ void Editor::changeScene() {
 }
 
 std::shared_ptr<Scene> Editor::getScene(int sceneNumber) {
-	if (sceneNumber == -1) {
+	if (sceneNumber == -1 || sceneNumber >= scenes.size()) {
 		return nullptr;
 	}
 	return scenes[sceneNumber];
