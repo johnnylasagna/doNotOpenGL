@@ -4,26 +4,32 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 
+#include "miniaudio/miniaudio.h"
+
 #include "graphics/camera.h"
 #include "core/timer.h"
 #include "core/input.h"
 #include "scenes/scene.h"
 #include "core/resourceManager.h"
+#include "core/editor.h"
 
 namespace DoNotOpenGL {
 
+enum class EditorMode { Video, PlayGround, Edit };
+
 class Application {
   public:
-	Application();
+	Application(Editor &editor);
 	~Application();
 
 	bool init();
 	void run();
-	void setScene(std::unique_ptr<Scene> newScene);
 
 	Input &getInput();
-	Scene *getActiveScene();
+	std::shared_ptr<Scene> getActiveScene();
 	ResourceManager &getResourceManager();
+
+	EditorMode editorMode = EditorMode::PlayGround;
 
 	void initImGui();
 	void renderImGui();
@@ -33,8 +39,21 @@ class Application {
 	GLFWwindow *window = nullptr;
 	Timer timer;
 	Input input;
-	std::unique_ptr<Scene> activeScene;
+	std::shared_ptr<Scene> activeScene;
 	ResourceManager resourceManager;
+	Editor &editor;
+
+	void sceneChangeInput();
+	void videoModeInput();
+	void editorModeInput();
+
+	void renderPlaybackUI();
+	void renderClipsUI();
+
+	bool playing = false;
+
+	ma_engine engine;
+	ma_sound music;
 };
 
 } // namespace DoNotOpenGL

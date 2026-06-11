@@ -12,6 +12,9 @@ struct Mesh {
 	unsigned int vertexCount;
 	unsigned int indexCount;
 
+	std::vector<float> vertices;
+	std::vector<unsigned int> indices;
+
 	Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
 	~Mesh();
 

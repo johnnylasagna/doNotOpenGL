@@ -1,3 +1,5 @@
+#pragma once
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -18,8 +20,8 @@ struct Transform {
 };
 
 struct Material {
-	Texture *diffuseTexture = nullptr;
-	Texture *specularTexture = nullptr;
+	std::shared_ptr<Texture> diffuseTexture;
+	std::shared_ptr<Texture> specularTexture;
 	float shininess = 0.0f;
 };
 
@@ -50,9 +52,9 @@ struct Light {
 
 struct Object {
 	std::shared_ptr<Mesh> mesh;
-	Shader *shader;
-	Texture *bodyTexture = nullptr;
-	Texture *heightMap = nullptr;
+	std::shared_ptr<Shader> shader;
+	std::shared_ptr<Texture> bodyTexture;
+	std::shared_ptr<Texture> heightMap;
 
 	Transform transform;
 	std::optional<Material> material;
@@ -62,18 +64,18 @@ struct Object {
 	bool isSkybox = false;
 	glm::vec3 sourceLightColor = glm::vec3(1.0f);
 
-	Object(std::shared_ptr<Mesh> mesh, Shader *shader, Transform transform);
+	Object(std::shared_ptr<Mesh> mesh, std::shared_ptr<Shader> shader, Transform transform);
 
-	void render(glm::vec3 &viewPos, std::vector<Light> lights);
+	void render(glm::vec3 &viewPos, std::vector<Light>& lights);
 
-	void setProjection(glm::mat4 &projection);
-	void setView(glm::mat4 &view);
+	void setProjection(const glm::mat4 &projection);
+	void setView(const glm::mat4 &view);
 	void setModel();
 
-	void setMaterial(Texture *diffuse, Texture *specular, float shininess);
+	void setMaterial(const std::shared_ptr<Texture>& diffuse, const std::shared_ptr<Texture>& specular, float shininess);
 	void setLight(Light light);
 
-	void setLightSource(std::string id, Light &light);
+	void setLightSource(const std::string& id, const Light &light);
 };
 
 } // namespace DoNotOpenGL

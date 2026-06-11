@@ -3,6 +3,7 @@ project(DoNotOpenGL)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Define the global include directory for header files
 include_directories(include)
@@ -13,6 +14,7 @@ include_directories(include)
 # Compile all core engine files into a static library (.lib or .a)
 add_library(EngineCore STATIC
     src/core/application.cpp
+    src/core/editor.cpp
     src/core/input.cpp
     src/core/errors.cpp
     src/core/window.cpp
@@ -23,6 +25,7 @@ add_library(EngineCore STATIC
     src/graphics/shader.cpp
     src/graphics/texture.cpp
     src/graphics/object.cpp
+    src/scenes/scene.cpp
     
     # Include glad.c and stb_image.cpp if they are in your source tree
     src/glad/glad.c 
@@ -35,6 +38,9 @@ add_library(EngineCore STATIC
     src/imgui/imgui_widgets.cpp
     src/imgui/imgui_impl_glfw.cpp
     src/imgui/imgui_impl_opengl3.cpp
+
+    #miniaudio
+    src/miniaudio/miniaudio.cpp
 )
 
 target_include_directories(EngineCore PRIVATE
@@ -53,6 +59,9 @@ target_link_libraries(EngineCore PRIVATE OpenGL::GL glfw3)
 add_executable(App
     src/main.cpp
     src/scenes/scene_1.cpp
+    # src/scenes/scene_2.cpp
+    # src/scenes/scene_3.cpp
+    # src/scenes/scene_4.cpp
 )
 
 # Link the pre-compiled EngineCore library to the executable

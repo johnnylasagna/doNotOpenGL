@@ -5,7 +5,7 @@
 
 namespace DoNotOpenGL {
 
-Mesh::Mesh(const std::vector<float> &vertices, const std::vector<unsigned int> &indices) {
+Mesh::Mesh(const std::vector<float> &vertices, const std::vector<unsigned int> &indices) : vertices(vertices), indices(indices) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -28,7 +28,7 @@ Mesh::Mesh(const std::vector<float> &vertices, const std::vector<unsigned int> &
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	vertexCount = vertices.size();
+	vertexCount = vertices.size() / 8;
 	indexCount = indices.size();
 }
 

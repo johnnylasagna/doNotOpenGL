@@ -19,7 +19,7 @@ struct Texture {
 	Texture(Texture &&other) noexcept;
 	Texture &operator=(Texture &&other) noexcept;
 
-	void use(unsigned int unit);
+	void use(unsigned int unit) const;
 };
 
 } // namespace DoNotOpenGL

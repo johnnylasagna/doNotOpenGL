@@ -38,7 +38,7 @@ struct Camera {
 	void updateCameraVectors();
 	void processKeyboard(CameraMovement direction, float deltaTime);
 	void processMouseMovement(float xOffset, float yOffset, bool constrainPitch = true);
-	void ProcessMouseScroll(float yoffset);
+	void processMouseScroll(float yoffset);
 	void moveToward(float deltaTime, float desiredDistance);
 };
 

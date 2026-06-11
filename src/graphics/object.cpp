@@ -2,14 +2,15 @@
 
 namespace DoNotOpenGL {
 
-Object::Object(std::shared_ptr<Mesh> mesh, Shader *shader, Transform transform) : mesh(mesh), shader(shader), transform(transform) {}
+Object::Object(std::shared_ptr<Mesh> mesh, std::shared_ptr<Shader> shader, Transform transform)
+    : mesh(mesh), shader(shader), transform(transform) {}
 
-void Object::setProjection(glm::mat4 &projection) {
+void Object::setProjection(const glm::mat4 &projection) {
 	shader->use();
 	shader->setMat4("projection", projection);
 }
 
-void Object::setView(glm::mat4 &view) {
+void Object::setView(const glm::mat4 &view) {
 	shader->use();
 	shader->setMat4("view", view);
 };
@@ -26,7 +27,7 @@ void Object::setModel() {
 	shader->setMat3("normalMatrix", normalMatrix);
 }
 
-void Object::render(glm::vec3 &viewPos, std::vector<Light> lights) {
+void Object::render(glm::vec3 &viewPos, std::vector<Light>& lights) {
 	shader->use();
 
 	if (bodyTexture) {
@@ -70,17 +71,17 @@ void Object::render(glm::vec3 &viewPos, std::vector<Light> lights) {
 		if (mat.diffuseTexture) {
 			mat.diffuseTexture->use(2);
 			shader->setInt("material.diffuse", 2);
-			shader->setBool("material.hasDiffuseMap", true); 
+			shader->setBool("material.hasDiffuseMap", true);
 		} else {
-			shader->setBool("material.hasDiffuseMap", false); 
+			shader->setBool("material.hasDiffuseMap", false);
 		}
 
 		if (mat.specularTexture) {
 			mat.specularTexture->use(3);
 			shader->setInt("material.specular", 3);
-			shader->setBool("material.hasSpecularMap", true); 
+			shader->setBool("material.hasSpecularMap", true);
 		} else {
-			shader->setBool("material.hasSpecularMap", false); 
+			shader->setBool("material.hasSpecularMap", false);
 		}
 
 		shader->setFloat("material.shininess", mat.shininess);
@@ -91,7 +92,7 @@ void Object::render(glm::vec3 &viewPos, std::vector<Light> lights) {
 	glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, 0);
 }
 
-void Object::setMaterial(Texture *diffuse, Texture *specular, float shininess) {
+void Object::setMaterial(const std::shared_ptr<Texture>& diffuse, const std::shared_ptr<Texture>& specular, float shininess) {
 
 	material = Material{diffuse, specular, shininess};
 
@@ -103,7 +104,7 @@ void Object::setMaterial(Texture *diffuse, Texture *specular, float shininess) {
 
 void Object::setLight(Light light) { this->light = light; }
 
-void Object::setLightSource(std::string prefix, Light &light) {
+void Object::setLightSource(const std::string& prefix, const Light &light) {
 	shader->setInt(prefix + "type", static_cast<int>(light.type));
 	shader->setVec3(prefix + "position", light.position);
 	shader->setVec3(prefix + "direction", light.direction);

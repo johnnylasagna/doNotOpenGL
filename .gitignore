@@ -9,9 +9,15 @@ include/glad
 include/stb_image.h
 src/glad
 src/imgui
+src/miniaudio
 src/scenes/*
 !src/scenes/scene_1.cpp
+!src/scenes/scene.cpp
+include/miniaudio
 include/scenes/*
 !include/scenes/scene.h
 !include/scenes/scene_1.h
 videoSaveHack.txt
+.clang-tidy
+output.mp4
+tidy.log

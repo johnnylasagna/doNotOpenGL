@@ -8,23 +8,42 @@
 
 namespace DoNotOpenGL {
 
-Scene1::Scene1(Application *app) : Scene(app), camera(0.0f, 0.0f, 5.0f, 0.1f, 45.0f) {}
+Scene1::Scene1(Application *app) : Scene(app) {}
 
-void Scene1::init() {
+void Scene1::initCamera() {
+	camera = Camera(180.0f, 0.0f, 5.0f, 0.1f, 45.0f);
 	camera.pos = glm::vec3(-100.0f, 0.0f, 0.0f);
 	camera.targetSet = CameraTarget::SET;
+}
 
+void Scene1::init() {
+	speed = 1.0f;
+
+	initCamera();
+	initLights();
+	initEnvironment();
+	initSkybox();
+}
+
+void Scene1::reset() {
+	camera = Camera(180.0f, 0.0f, 5.0f, 0.1f, 45.0f);
+	camera.pos = glm::vec3(-100.0f, 0.0f, 0.0f);
+	camera.targetSet = CameraTarget::SET;
+	lightObjects[0].transform = Transform{glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(2.5f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f};
+	materialObjects[0].transform = Transform{glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(1.25f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f};
+}
+
+void Scene1::initLights() {
 	ResourceManager &rm = application->getResourceManager();
 
-	// Utilize the shared sphere mesh generator
-	std::shared_ptr<Mesh> sphereMesh = createSphereMesh(300, 300);
-
-	// --- Light Setup (Sun) ---
-	Shader *lightShader = rm.loadShader("sun", "shaders/vertex/uber.vs", "shaders/fragment/uber.fs");
-	Texture *lightTexture = rm.loadTexture("sun", "assets/sun.jpg");
+	auto sphereMesh = rm.getMesh("sphere", []() { return createSphereMesh(300, 300); });
+	auto lightShader = rm.loadShader("sun", "shaders/vertex/uber.vs", "shaders/fragment/uber.fs");
+	auto lightTexture = rm.loadTexture("sun", "assets/sun.jpg");
 
 	glm::vec3 lightPos(0.0f, 0.0f, 0.0f);
+
 	Transform lightTransform{lightPos, glm::vec3(2.5f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f};
+
 	Object lightObject(sphereMesh, lightShader, lightTransform);
 
 	lightObject.isLightSource = true;
@@ -41,36 +60,53 @@ void Scene1::init() {
 	sunLight.constant = 1.0f;
 	sunLight.linear = 0.005f;
 	sunLight.quadratic = 0.0025f;
+
 	lightObject.setLight(sunLight);
 
 	lightObjects.push_back(lightObject);
+}
 
-	// --- Object Setup (Planet) ---
-	Shader *objectShader = rm.loadShader("earth", "shaders/vertex/uber.vs", "shaders/fragment/uber.fs");
-	Texture *objectTexture = rm.loadTexture("planetEarth", "assets/earth_day.jpg");
+void Scene1::initEnvironment() {
+	ResourceManager &rm = application->getResourceManager();
+
+	auto sphereMesh = rm.getMesh("sphere", []() { return createSphereMesh(300, 300); });
+	auto objectShader = rm.loadShader("earth", "shaders/vertex/uber.vs", "shaders/fragment/uber.fs");
+	auto objectTexture = rm.loadTexture("earth", "assets/earth_day.jpg");
 
 	Transform objectTransform{glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(1.25f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f};
-	Object materialObject(sphereMesh, objectShader, objectTransform);
 
-	materialObject.bodyTexture = objectTexture;
-	materialObject.setMaterial(nullptr, nullptr, 16.0f);
+	Object earthObject(sphereMesh, objectShader, objectTransform);
 
-	materialObjects.push_back(materialObject);
+	earthObject.bodyTexture = objectTexture;
+	earthObject.setMaterial(nullptr, nullptr, 16.0f);
 
-	// --- Skybox Setup (Stars) ---
-	Shader *skyShader = rm.loadShader("sky", "shaders/vertex/uber.vs", "shaders/fragment/uber.fs");
-	Texture *skyboxTexture = rm.loadTexture("stars", "assets/stars.jpg");
+	materialObjects.push_back(earthObject);
+}
+
+void Scene1::initSkybox() {
+	ResourceManager &rm = application->getResourceManager();
+
+	auto sphereMesh = rm.getMesh("sphere", []() { return createSphereMesh(300, 300); });
+	auto skyShader = rm.loadShader("sky", "shaders/vertex/uber.vs", "shaders/fragment/uber.fs");
+	auto skyTexture = rm.loadTexture("stars", "assets/stars.jpg");
 
 	Transform skyTransform{glm::vec3(0.0f), glm::vec3(20.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f};
-	Object skyboxObject(sphereMesh, skyShader, skyTransform);
 
-	skyboxObject.isSkybox = true;
-	skyboxObject.bodyTexture = skyboxTexture;
+	Object skyObject(sphereMesh, skyShader, skyTransform);
 
-	skyObjects.push_back(skyboxObject);
+	skyObject.isSkybox = true;
+	skyObject.bodyTexture = skyTexture;
+
+	skyObjects.push_back(skyObject);
 }
 
 void Scene1::update(float deltaTime) {
+	updatePlanet(deltaTime);
+	updateLights(deltaTime);
+	updateCamera(deltaTime);
+}
+
+void Scene1::updatePlanet(float deltaTime) {
 	static float theta = 0.0f;
 
 	if (!materialObjects.empty()) {
@@ -78,15 +114,23 @@ void Scene1::update(float deltaTime) {
 		materialObjects[0].transform.angle = theta;
 	}
 
+	theta += speed * deltaTime;
+}
+
+void Scene1::updateLights(float deltaTime) {
+	static float theta = 0.0f;
+
+	theta += speed * deltaTime;
+
 	if (!lightObjects.empty()) {
 		lightObjects[0].transform.angle = theta / 10.0f;
 	}
+}
 
-	theta += 1.0f * deltaTime;
-
+void Scene1::updateCamera(float deltaTime) {
 	if (!materialObjects.empty()) {
 		camera.target = materialObjects[0].transform.position;
-		camera.moveToward(deltaTime, 1.0f);
+		camera.moveToward(deltaTime, speed);
 	}
 }
 
@@ -99,36 +143,47 @@ void Scene1::render(Camera &camera, float aspectRatio) {
 	}
 
 	glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), aspectRatio, 0.1f, 500.0f);
-	glm::mat4 view = camera.GetViewMatrix();
-	glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
-	// Consolidate active lights
+	glm::mat4 view = camera.GetViewMatrix();
+
 	std::vector<Light> activeLights;
+
 	for (auto &lightObj : lightObjects) {
 		if (lightObj.light.has_value()) {
 			activeLights.push_back(lightObj.light.value());
 		}
 	}
 
-	// 1. Render Skybox
+	renderSkybox(projection, view, activeLights);
+	renderEnvironment(projection, view, activeLights);
+	renderLightMeshes(projection, view, activeLights);
+}
+
+void Scene1::renderSkybox(glm::mat4 &projection, glm::mat4 &view, std::vector<Light> &activeLights) {
+	glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
+
 	glDepthMask(GL_FALSE);
+
 	for (auto &skyObject : skyObjects) {
 		skyObject.setProjection(projection);
 		skyObject.setView(skyboxView);
 		skyObject.setModel();
 		skyObject.render(camera.pos, activeLights);
 	}
-	glDepthMask(GL_TRUE);
 
-	// 2. Render Terrain/Materials
+	glDepthMask(GL_TRUE);
+}
+
+void Scene1::renderEnvironment(glm::mat4 &projection, glm::mat4 &view, std::vector<Light> &activeLights) {
 	for (auto &materialObject : materialObjects) {
 		materialObject.setProjection(projection);
 		materialObject.setView(view);
 		materialObject.setModel();
 		materialObject.render(camera.pos, activeLights);
 	}
+}
 
-	// 3. Render Light Sources
+void Scene1::renderLightMeshes(glm::mat4 &projection, glm::mat4 &view, std::vector<Light> &activeLights) {
 	for (auto &lightObject : lightObjects) {
 		lightObject.setProjection(projection);
 		lightObject.setView(view);
@@ -144,22 +199,27 @@ void Scene1::processInput(Input &input, float deltaTime) {
 
 	if (input.isKeyPressed(GLFW_KEY_W))
 		camera.processKeyboard(CameraMovement::FORWARD, deltaTime);
+
 	if (input.isKeyPressed(GLFW_KEY_S))
 		camera.processKeyboard(CameraMovement::BACKWARD, deltaTime);
+
 	if (input.isKeyPressed(GLFW_KEY_A))
 		camera.processKeyboard(CameraMovement::LEFT, deltaTime);
+
 	if (input.isKeyPressed(GLFW_KEY_D))
 		camera.processKeyboard(CameraMovement::RIGHT, deltaTime);
 
 	float xOffset = input.getMouseOffsetX();
 	float yOffset = input.getMouseOffsetY();
+
 	if (xOffset != 0.0f || yOffset != 0.0f) {
 		camera.processMouseMovement(xOffset, yOffset);
 	}
 
 	float scrollOffset = input.getScrollOffsetY();
+
 	if (scrollOffset != 0.0f) {
-		camera.ProcessMouseScroll(scrollOffset);
+		camera.processMouseScroll(scrollOffset);
 	}
 }
 

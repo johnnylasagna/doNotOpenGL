@@ -48,7 +48,7 @@ Texture &Texture::operator=(Texture &&other) noexcept {
 	return *this;
 }
 
-void Texture::use(unsigned int unit) {
+void Texture::use(unsigned int unit) const {
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(GL_TEXTURE_2D, id);
 }
